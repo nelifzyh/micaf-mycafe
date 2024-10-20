@@ -4,7 +4,7 @@ Before you begin, ensure you have the following installed on your machine:
 - [Node.js](https://nodejs.org/) (for running a local server, optional but recommended)
 - [Visual Studio Code](https://code.visualstudio.com/download) 
 
-## Installation
+## How to run in localhost
 
 Follow these steps to get a copy of the project up and running on your local machine.
 
