@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MICAF - Detail Makanan</title>
+    <link href="css/output.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="bg-red-500 text-white py-10">
+        <div class="container mx-auto px-6 text-center">
+            <h1 class="text-4xl font-bold">Detail Makanan</h1>
+        </div>
+    </header>
+
+    <!-- Konten Detail Makanan -->
+    <div class="container mx-auto px-8 py-16">
+        <div id="mealDetail" class="bg-white shadow-md rounded-lg p-6">
+            <!-- Detail makanan akan dimuat di sini -->
+        </div>
+    </div>
+
+    <!-- Pop-up Gambar -->
+    <div id="imagePopup" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50">
+        <div class="relative">
+            <button id="closePopup" class="absolute top-0 right-0 m-4 text-white text-2xl hover:text-red-400">&times;</button>
+            <img id="popupImage" src="" alt="Popup Image" class="max-w-full max-h-screen object-contain">
+        </div>
+    </div>
+
+    <script src="js/meals_detail.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Ambil mealId dari URL
+            const params = new URLSearchParams(window.location.search);
+            const mealId = params.get('mealId');
+
+            // Ambil data detail makanan dari API
+            fetch(`https://www.themealdb.com/api/json/v1/1/lookup.php?i=${mealId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const meal = data.meals[0];
+                    const mealDetail = document.getElementById('mealDetail');
+
+                    // Tampilkan detail makanan
+                    const detailContent = `
+                        <h2 class="text-3xl font-bold mb-4 text-center">${meal.strMeal}</h2>
+                        <img id="mealImage" src="${meal.strMealThumb}" alt="${meal.strMeal}" class="w-full h-96 object-cover rounded-lg mb-6 cursor-pointer">
+
+                        <h3 class="text-2xl font-semibold mb-4">Recipe (Bahan-bahan):</h3>
+                        <ul class="list-disc pl-5 mb-6">
+                            ${getIngredients(meal)}
+                        </ul>
+
+                        <h3 class="text-2xl font-semibold mb-4">Tutorial (Langkah-langkah):</h3>
+                        <ul class="list-disc pl-5 mb-6">
+                            ${getInstructions(meal.strInstructions)}
+                        </ul>
+
+                        <h3 class="text-2xl font-semibold mb-4">Video Resep:</h3>
+                        ${getYoutubeEmbed(meal.strYoutube)}
+                    `;
+                    mealDetail.innerHTML = detailContent;
+
+                    // Tambahkan event listener untuk gambar
+                    const mealImage = document.getElementById('mealImage');
+                    const imagePopup = document.getElementById('imagePopup');
+                    const popupImage = document.getElementById('popupImage');
+                    const closePopup = document.getElementById('closePopup');
+
+                    mealImage.addEventListener('click', function() {
+                        popupImage.src = meal.strMealThumb; // Set sumber gambar pop-up
+                        imagePopup.classList.remove('hidden'); // Tampilkan pop-up
+                    });
+
+                    // Tutup pop-up saat tombol 'X' diklik
+                    closePopup.addEventListener('click', function() {
+                        imagePopup.classList.add('hidden'); // Sembunyikan pop-up
+                    });
+                })
+                .catch(error => console.error('Error fetching meal details:', error));
+        });
+
+        // Fungsi untuk mendapatkan daftar bahan-bahan makanan
+        function getIngredients(meal) {
+            let ingredients = '';
+            for (let i = 1; i <= 20; i++) {
+                const ingredient = meal[`strIngredient${i}`];
+                const measure = meal[`strMeasure${i}`];
+                if (ingredient && ingredient.trim()) {
+                    ingredients += `<li>${measure} ${ingredient}</li>`;
+                }
+            }
+            return ingredients;
+        }
+
+        // Fungsi untuk memformat instruksi jadi list langkah-langkah
+        function getInstructions(instructions) {
+            return instructions
+                .split('\n')
+                .filter(step => step.trim() !== '')
+                .map(step => `<li>${step}</li>`)
+                .join('');
+        }
+
+        // Fungsi untuk meng-embed video YouTube
+        function getYoutubeEmbed(youtubeUrl) {
+            if (!youtubeUrl) return '<p>Tidak ada video resep yang tersedia.</p>';
+
+            const videoId = youtubeUrl.split('v=')[1];
+            return `
+                <div>
+                    <iframe class="aspect-w-16 aspect-h-9" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
